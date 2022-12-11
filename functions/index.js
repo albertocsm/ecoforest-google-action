@@ -73,7 +73,6 @@ app.onQuery(async (body, headers) => {
         }));
   }
 
-  // Wait for all promises to resolve
   await Promise.all(queryPromises);
   return {
     requestId: requestId,
@@ -83,7 +82,6 @@ app.onQuery(async (body, headers) => {
 
 app.onExecute(async (body, headers) => {
   const { requestId } = body;
-  // Execution results are grouped by status
   const result = {
     ids: [],
     status: 'SUCCESS',
@@ -97,9 +95,8 @@ app.onExecute(async (body, headers) => {
   for (const command of intent.payload.commands) {
     for (const device of command.devices) {
       for (const execution of command.execution) {
-        const stripedAuthHeader = stripAuthorizationHeader(headers);
         executePromises.push(
-          updateDevice(execution, getUserHash(headers), device.id, stripedAuthHeader)
+          updateDevice(execution, getUserHash(headers), device.id, stripAuthorizationHeader(headers))
             .then((data) => {
               result.ids.push(device.id);
               Object.assign(result.states, data);
@@ -167,7 +164,7 @@ const queryFirebase = async (usernameHash, deviceId) => {
       on: snapshotVal.OnOff.on
     };
   } else {
-    
+
     // ups! no state for this user/device. maybe its a new user!
     const pkg = {
       OnOff: { on: false }
@@ -180,7 +177,6 @@ const queryFirebase = async (usernameHash, deviceId) => {
   }
 };
 
-///////////
 exports.fakeauth = functions.https.onRequest((request, response) => {
 
   functions.logger.log('fakeauth: redirecting to login page');
@@ -199,7 +195,7 @@ exports.login = functions.https.onRequest((request, response) => {
           <input type="hidden" name="state" value="${request.query.state}" />
           <input name="address" value="my-ecoforest-url:port" /></br>
           <input name="serialnumber" value="my-serialnumber" /></br>
-          <input name="password" value="my-password-8-digits" /></br>      
+          <input name="password" value="my-password-8-digits" /></br>
           <button type="submit" style="font-size:14pt">
             Submit
           </button>
@@ -216,7 +212,6 @@ exports.login = functions.https.onRequest((request, response) => {
 
     return response.redirect(url);
   } else {
-    // Unsupported method
     response.send(405, 'Method Not Allowed');
   }
 });
@@ -252,10 +247,6 @@ exports.faketoken = functions.https.onRequest((request, response) => {
   }
 });
 
-/**
- * Send a REPORT STATE call to the homegraph when data for any device id
- * has been changed.
- */
 exports.reportstate = functions.database.ref('{usernameHash}/{deviceId}').onWrite(
   async (change, context) => {
     functions.logger.info('reportstate: Firebase write event triggered Report State');

@@ -21,24 +21,15 @@ class EcoStove {
                 'Content-type': ' application/x-www-form-urlencoded; charset=utf-8'
             },
         });
-        //this._httpClient.interceptors.request.use(request => {
-        //    functions.logger.log('_httpClient: Starting Request', JSON.stringify(request, null, 2))
-        //    return request
-        //});
-        //this._httpClient.interceptors.response.use(response => {
-        //    functions.logger.log('_httpClient:: Response:', JSON.stringify(response, null, 2))
-        //    return response
-        //});
     }
 
     _postData(address, data) {
         return this._httpClient.post(address, new url.URLSearchParams(data))
             .then(response => {
-                functions.logger.log(`_postData: ${JSON.stringify(response)}`);
                 return response
             })
             .catch(error => {
-                functions.logger.log(`_postData: ${JSON.stringify(error)}`);
+                //functions.logger.log(`_postData: ${JSON.stringify(error)}`);
                 return error;
             });;
     }
