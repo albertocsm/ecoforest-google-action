@@ -9,7 +9,7 @@
 - when prompted, choose the latest release available
 ![Dec-11-2022 16-42-38](https://user-images.githubusercontent.com/3460078/206916732-f0176c9d-1cc8-45bf-b77b-adef87b6bd41.gif)
 
-### how configure your Ecoforest access with Google Home app on your smartphone?
+### how to configure your Ecoforest credentials with Google Home app on your smartphone?
 - install and open Google Home from the app store on your phone
 - choose "Set up device"
 - choose "Works with Google"
@@ -28,3 +28,5 @@ you can now power on/off your Ecoforest stove using Google Home and/or Google As
 ```
 in this example "Fireplace" is the name I chose for the device in the Google Home app.
 
+### ToDo
+- sync from live device
