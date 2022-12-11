@@ -1,0 +1,10 @@
+**/functions/node_modules
+**/functions/package-lock.json
+**/firebase-debug.log
+**/.firebaserc
+**/.firebase
+
+**/functions/key.json
+**/worksheet**
+**/*.log
+**/test**
