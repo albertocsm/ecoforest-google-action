@@ -9,6 +9,5 @@ const getUserHash = (headers) => {
     const deviceApiBaseAddress = stripAuthorizationHeader(headers);
     return CryptoJS.MD5(deviceApiBaseAddress).toString();
 }
-
 exports.stripAuthorizationHeader = stripAuthorizationHeader;
 exports.getUserHash = getUserHash;

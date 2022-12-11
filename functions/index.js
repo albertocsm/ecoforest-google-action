@@ -9,7 +9,6 @@ const EcoStove = require('./ecoStove.js');
 const { stripAuthorizationHeader, getUserHash } = require('./utils.js')
 
 // Initialize
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 admin.initializeApp();
 const firebaseRef = admin.database().ref('/');
 const auth = new google.auth.GoogleAuth({
@@ -23,6 +22,7 @@ const ecoStove = new EcoStove();
 const app = smarthome();
 
 app.onSync((body, headers) => {
+  functions.logger.info(`onSync...`);
   return {
     requestId: body.requestId,
     payload: {
@@ -56,6 +56,7 @@ app.onSync((body, headers) => {
 });
 
 app.onQuery(async (body, headers) => {
+  functions.logger.info(`onQuery...`);
   const { requestId } = body;
   const payload = {
     devices: {},
@@ -67,7 +68,7 @@ app.onQuery(async (body, headers) => {
     const deviceId = device.id;
     const userHash = getUserHash(headers);
     queryPromises.push(
-      queryDevice(userHash, deviceId)
+      queryDevice(userHash, deviceId, stripAuthorizationHeader(headers))
         .then((data) => {
           payload.devices[deviceId] = data;
         }));
@@ -81,6 +82,7 @@ app.onQuery(async (body, headers) => {
 });
 
 app.onExecute(async (body, headers) => {
+  functions.logger.info(`onExecute...`);
   const { requestId } = body;
   const result = {
     ids: [],
@@ -117,7 +119,7 @@ app.onExecute(async (body, headers) => {
 });
 
 app.onDisconnect((body, headers) => {
-  functions.logger.log('onDisconnect: User account unlinked from Google Assistant');
+  functions.logger.log('onDisconnect...');
   return {};
 });
 
@@ -125,34 +127,60 @@ const updateDevice = async (execution, usernameHash, deviceId, deviceApiBaseAddr
   const { params, command } = execution;
   let state;
   let ref;
-  switch (command) {
-    case 'action.devices.commands.OnOff':
-      state = { on: params.on };
-      try {
-        // call Ecoforest API
+  try {
+    switch (command) {
+      case 'action.devices.commands.OnOff':
+        state = { on: params.on };
+
+        // call Ecoforest Device API
         if (params.on === true) {
           await ecoStove.ecoTurnOn(deviceApiBaseAddress);
         } else {
           await ecoStove.ecoTurnOff(deviceApiBaseAddress);
         }
+        break;
+    }
 
-        // update DB
-        ref = firebaseRef.child(usernameHash).child(deviceId).child('OnOff');
-      }
-      catch (err) {
-        functions.logger.error(err);
-        response.status(500).send(`updateDevice: update device error -  ${err}`);
-      }
-      break;
+    // update fireabse
+    return firebaseRef
+      .child(usernameHash).child(deviceId).child('OnOff').update(state)
+      .then(() => state);;
   }
-
-  return ref.update(state).then(() => state);
+  catch (err) {
+    functions.logger.error(`updateDevice: ${err}`);
+    response.status(500).send(`updateDevice: update device error -  ${err}`);
+  }
 };
 
-const queryDevice = async (usernameHash, deviceId) => {
-  const data = await queryFirebase(usernameHash, deviceId);
-  return {
-    on: data.on
+const queryDevice = async (usernameHash, deviceId, deviceApiBaseAddress) => {
+  try {
+    const firebaseData = await queryFirebase(usernameHash, deviceId);
+    const liveDeviceData = await ecoStove.ecoGetStatus(deviceApiBaseAddress);
+
+    // no data on firebase? maybe its a new user!
+    if (firebaseData === null) {
+      functions.logger.info(`queryDevice: new user [${usernameHash}]?`);
+    }
+
+    // firebase can be out of sync with the live data
+    // if thats the case, firebase needs to be udpated
+    if (firebaseData === null || (firebaseData.on != liveDeviceData.on)) {
+      const state = {
+        OnOff: { on: liveDeviceData.on }
+      }
+      functions.logger.info(`queryDevice: firebase de-sync for user [${usernameHash}]. ovewriting with ${JSON.stringify(state)}`);
+      firebaseRef.child(usernameHash).child(deviceId).set(state);
+    }
+
+    return {
+      on: liveDeviceData.on
+    };
+  }
+  catch (err) {
+    functions.logger.error('queryDevice: failed!!! returning a default device state', err);
+    return {
+      on: false
+    };
   };
 };
 
@@ -164,16 +192,7 @@ const queryFirebase = async (usernameHash, deviceId) => {
       on: snapshotVal.OnOff.on
     };
   } else {
-
-    // ups! no state for this user/device. maybe its a new user!
-    const pkg = {
-      OnOff: { on: false }
-    };
-    firebaseRef.child(usernameHash).child(deviceId).set(pkg);
-
-    return {
-      on: false
-    };
+    return null;
   }
 };
 
@@ -242,14 +261,14 @@ exports.faketoken = functions.https.onRequest((request, response) => {
     response.status(HTTP_STATUS_OK).json(obj);
   }
   catch (err) {
-    functions.logger.error(err);
+    functions.logger.error(`faketoken: ${err}`);
     response.status(500).send(`faketoken: Error requesting token: ${err}`);
   }
 });
 
 exports.reportstate = functions.database.ref('{usernameHash}/{deviceId}').onWrite(
   async (change, context) => {
-    functions.logger.info('reportstate: Firebase write event triggered Report State');
+    functions.logger.info('reportstate: Firebase write event triggered');
     const snapshot = change.after.val();
 
     const requestBody = {
@@ -269,7 +288,6 @@ exports.reportstate = functions.database.ref('{usernameHash}/{deviceId}').onWrit
     const res = await homegraph.devices.reportStateAndNotification({
       requestBody,
     });
-    functions.logger.info('reportstate: Report state response:', res.status, res.data);
   });
 
 exports.smarthome = functions.https.onRequest(app);

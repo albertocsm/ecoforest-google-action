@@ -7,7 +7,8 @@
   "scripts": {
     "lint": "eslint .",
     "serve": "firebase serve",
-    "debug": "firebase emulators:start --inspect-functions"
+    "debug": "firebase emulators:start --inspect-functions",
+    "test": "node --insecure-http-parser test.js"
   },
   "dependencies": {
     "actions-on-google": "^2.12.0",

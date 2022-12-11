@@ -27,6 +27,3 @@ you can now power on/off your Ecoforest stove using Google Home and/or Google As
    Hey Google, turn on the Fireplace
 ```
 in this example "Fireplace" is the name I chose for the device in the Google Home app.
-
-### ToDo
-- sync from live device

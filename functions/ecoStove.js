@@ -5,7 +5,7 @@ const url = require('url');
 
 class EcoStove {
     constructor() {
-
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
         this._httpsAgent = new https.Agent({
             rejectUnauthorized: false,
             keepAlive: true
@@ -21,17 +21,6 @@ class EcoStove {
                 'Content-type': ' application/x-www-form-urlencoded; charset=utf-8'
             },
         });
-    }
-
-    _postData(address, data) {
-        return this._httpClient.post(address, new url.URLSearchParams(data))
-            .then(response => {
-                return response
-            })
-            .catch(error => {
-                //functions.logger.log(`_postData: ${JSON.stringify(error)}`);
-                return error;
-            });;
     }
 
     ecoTurnOn(deviceApiBaseAddress) {
@@ -57,6 +46,39 @@ class EcoStove {
                 on_off: 0
             }
         );
+    }
+
+    ecoGetStatus(deviceApiBaseAddress) {
+        return this._postData(
+            `${deviceApiBaseAddress}/recepcion_datos_4.cgi/`,
+            {
+                idOperacion: '1002'
+            }
+        ).then(response => {
+            return this._parseStatusResponse(response.data);
+        });
+    }
+
+    _postData(address, data) {
+        return this._httpClient.post(address, new url.URLSearchParams(data))
+            .then(response => {
+                return response
+            })
+            .catch(error => {
+                //functions.logger.log(`_postData: ${JSON.stringify(error)}`);
+                return error;
+            });;
+    }
+
+    _parseStatusResponse(value) {
+        const isOn = value
+            .split('\n')
+            .find(line => line.startsWith('on_off'))
+            .split('=')[1];
+
+        return {
+            on: isOn === '0' ? false : true
+        };
     }
 }
 
