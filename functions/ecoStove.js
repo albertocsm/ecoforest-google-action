@@ -76,8 +76,13 @@ class EcoStove {
             .find(line => line.startsWith('on_off'))
             .split('=')[1];
 
+        const estado = value
+            .split('\n')
+            .find(line => line.startsWith('estado'))
+            .split('=')[1];
+
         return {
-            on: isOn === '0' ? false : true
+            on: isOn === '0' || (isOn === '1' && estado == '8') ? false : true
         };
     }
 }
