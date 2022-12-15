@@ -6,7 +6,7 @@ const { google } = require('googleapis');
 const util = require('util');
 const admin = require('firebase-admin');
 const EcoStove = require('./ecoStove.js');
-const { stripAuthorizationHeader, getUserHash } = require('./utils.js')
+const { delay, stripAuthorizationHeader, getUserHash } = require('./utils.js')
 
 // Initialize
 admin.initializeApp();
@@ -154,26 +154,36 @@ const updateDevice = async (execution, usernameHash, deviceId, deviceApiBaseAddr
 
 const queryDevice = async (usernameHash, deviceId, deviceApiBaseAddress) => {
   try {
-    const firebaseData = await queryFirebase(usernameHash, deviceId);
-    const liveDeviceData = await ecoStove.ecoGetStatus(deviceApiBaseAddress);
+    let firebaseData = await queryFirebase(usernameHash, deviceId);
 
     // no data on firebase? maybe its a new user!
     if (firebaseData === null) {
-      functions.logger.info(`queryDevice: new user [${usernameHash}]?`);
+      let state = { on: false }
+      functions.logger.info(`queryDevice: new user [${usernameHash}]!!!`);
+      firebaseRef.child(usernameHash).child(deviceId).set({
+        OnOff: state
+      });
+      firebaseData = state
     }
 
-    // firebase can be out of sync with the live data
-    // if thats the case, firebase needs to be udpated
-    if (firebaseData === null || (firebaseData.on != liveDeviceData.on)) {
-      const state = {
-        OnOff: { on: liveDeviceData.on }
-      }
-      functions.logger.info(`queryDevice: firebase de-sync for user [${usernameHash}]. ovewriting with ${JSON.stringify(state)}`);
-      firebaseRef.child(usernameHash).child(deviceId).set(state);
-    }
+    // when firebase gets out of sync, push the new status without blocking
+    ecoStove.ecoGetStatus(deviceApiBaseAddress)
+      .then(liveStatus => {
+        if (liveStatus.on === undefined) {
+          functions.logger.warn(`queryDevice: invalid device live status...`);
+        }
+        else if (firebaseData.on !== liveStatus.on) {
+          functions.logger.info(`queryDevice: firebase de-sync for user [${usernameHash}]`);
+          // hold off a bit in case the DB was just initialized for this user/device
+          delay(1000)
+          firebaseRef.child(usernameHash).child(deviceId).set({
+            OnOff: { on: liveStatus.on }
+          });
+        }
+      })
 
     return {
-      on: liveDeviceData.on
+      on: firebaseData.on
     };
   }
   catch (err) {
@@ -270,24 +280,28 @@ exports.reportstate = functions.database.ref('{usernameHash}/{deviceId}').onWrit
   async (change, context) => {
     functions.logger.info('reportstate: Firebase write event triggered');
     const snapshot = change.after.val();
-
-    const requestBody = {
-      requestId: 'ff36a3cc',
-      agentUserId: context.params.usernameHash,
-      payload: {
-        devices: {
-          states: {
-            [context.params.deviceId]: {
-              on: snapshot.OnOff.on,
+    if (snapshot !== null && snapshot.OnOff !== undefined) {
+      const requestBody = {
+        requestId: 'ff36a3cc',
+        agentUserId: context.params.usernameHash,
+        payload: {
+          devices: {
+            states: {
+              [context.params.deviceId]: {
+                on: snapshot.OnOff.on,
+              },
             },
           },
         },
-      },
-    };
+      };
 
-    const res = await homegraph.devices.reportStateAndNotification({
-      requestBody,
-    });
+      const res = await homegraph.devices.reportStateAndNotification({
+        requestBody,
+      });
+    }
+    else {
+      functions.logger.warn(`reportstate: no state. was the entry manualy deleted?`);
+    }
   });
 
 exports.smarthome = functions.https.onRequest(app);

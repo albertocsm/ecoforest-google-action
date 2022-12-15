@@ -55,6 +55,9 @@ class EcoStove {
                 idOperacion: '1002'
             }
         ).then(response => {
+            if (response.status !== 200) {
+                return {}
+            }
             return this._parseStatusResponse(response.data);
         });
     }
@@ -62,12 +65,18 @@ class EcoStove {
     _postData(address, data) {
         return this._httpClient.post(address, new url.URLSearchParams(data))
             .then(response => {
+                if (response.status !== 200) {
+                    functions.logger.warn(`_postData: invalid response | ${response.status} | ${response.statusText}`);
+                }
                 return response
+            }, error => {
+                functions.logger.error(`_postData: ${JSON.stringify(error)}`);
+                return error;
             })
             .catch(error => {
-                //functions.logger.log(`_postData: ${JSON.stringify(error)}`);
+                functions.logger.error(`_postData: ${JSON.stringify(error)}`);
                 return error;
-            });;
+            });
     }
 
     _parseStatusResponse(value) {
