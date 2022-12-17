@@ -70,11 +70,11 @@ class EcoStove {
                 }
                 return response
             }, error => {
-                functions.logger.error(`_postData: ${JSON.stringify(error)}`);
+                functions.logger.error(`_postData: handled error | ${JSON.stringify(error)}`);
                 return error;
             })
             .catch(error => {
-                functions.logger.error(`_postData: ${JSON.stringify(error)}`);
+                functions.logger.error(`_postData: catched error | ${JSON.stringify(error)}`);
                 return error;
             });
     }
