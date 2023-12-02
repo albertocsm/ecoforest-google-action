@@ -52,11 +52,8 @@ remove a schedule; device or all:
 ```
 
 ### privacy
-none of the device sensible information (address, serialnumber and password) is ever stored or disclosed outside of the authenticated user own Google account.
+none of the device sensible information (address, serialnumber and password) is ever stored or disclosed.
 
 ### self-host
 you can also run your own instance of this custom Google Action. you will need a `Google Cloud Platform` account, `node`, `npm` and the `firebase` CLI.
 follow the great step by step documentation from Google on https://developers.home.google.com/codelabs/smarthome-washer for all the details.  
-
-### disclaimer
-this project has no affiliation with the company Ecoforest and it's aimed for personal use
