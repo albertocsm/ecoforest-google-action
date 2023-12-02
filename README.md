@@ -52,7 +52,7 @@ remove a schedule; device or all:
 ```
 
 ### privacy
-none of the device sensible information (address, serialnumber and password) is ever stored or disclosed.
+No sensitive device information (address, serial number, password) is stored or disclosed.
 
 ### self-host
 you can also run your own instance of this custom Google Action. you will need a `Google Cloud Platform` account, `node`, `npm` and the `firebase` CLI.
