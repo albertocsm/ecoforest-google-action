@@ -1,59 +1,75 @@
 ### what is this and who is it for?
-- this is a custom Google Action compatible with Ecoforest devices. you can control your Ecoforest equipment using Google Assistant voice commands on your smartphone or Nest smartspeaker. you can also manage the device in the Google Home app
-- aimed for home-automation fans or for people that are unable to use the smartphone app or the device built-in screen and controls
+- this is a custom Google Home cloud-to-cloud bridge for Ecoforest fireplaces
+- it lets you control a fireplace from the Google Home app and Google Assistant, which is useful if you prefer voice control or want a simpler mobile UI than the vendor app
+
+### supported features
+- power on / off
+- set power level from 1 to 9
+- toggle quiet / silence mode
 
 ### how to get access to this Google Home Action?
-- raise your hand if you want to try this (i need to send you an invite)
-- go to https://console.actions.google.com/
+- go to `https://console.home.google.com/`
 - log in with your google account
-- choose "SmartStovePoC"
-- accept the disclamer thing
-- click "Test" on the top menu
-- click "Start testing"
-- when prompted, choose the latest release available
-![Dec-11-2022 16-42-38](https://user-images.githubusercontent.com/3460078/206916732-f0176c9d-1cc8-45bf-b77b-adef87b6bd41.gif)
+- open the `SmartStovePoC` project
+- open the test area and start the latest available test version
 
 ### how to connect your Ecoforest device?
-- install and open Google Home from the app store on your phone
-- choose "Set up device"
-- choose "Works with Google"
-- find "[test] MyEco"
-- go through the login page
-- once the device is added, change it's name to something you like (ie.: Fireplace)
+- install and open Google Home on your phone
+- choose `Set up device`
+- choose `Works with Google Home`
+- find `[test] MyEco`
+- complete the login form with your Ecoforest host, serial number, and password
+- once the device is added, rename it to something natural like `Fireplace`
 
-https://user-images.githubusercontent.com/3460078/206921937-69199d0f-811c-4d3c-8afc-6caae8c49f44.mp4
+### useful voice commands
 
-
-all done!
-
-you can now power on/off your Ecoforest device using Google Home app and Google Assistant voice commands.
-
-### usefull voice commands
-
-turn on / off immediatly
-```
-   (EN) Hey Google, turn on/off Fireplace
-   (PT) Hey Google, ligar/desligar Lareira
+turn on / off
+```text
+(EN) Hey Google, turn on Fireplace
+(EN) Hey Google, turn off Fireplace
+(PT) Hey Google, ligar Lareira
+(PT) Hey Google, desligar Lareira
 ```
 
-create a schedule
-```
-   (EN) Hey Google, turn on/off Fireplace at 7
-   (PT) Hey Google, ligar/desligar a Lareira às 7
+set power level
+```text
+(EN) Hey Google, set Fireplace to level 5
+(EN) Hey Google, set Fireplace power to 3
 ```
 
-remove a schedule; device or all:
-```
-   (EN) Hey Google, remove Fireplace schedule
-   (PT) Hey Google, remover agendamento de Lareira
-
-   (EN) Hey Google, cancel all my scheduled actions
-   (PT) Hey Google, remover acçoes agendadas
+toggle quiet mode
+```text
+(EN) Hey Google, turn on silence mode on Fireplace
+(EN) Hey Google, turn off silence mode on Fireplace
 ```
 
 ### privacy
-no sensitive device information (address, serial number, password) is stored or disclosed.
+- the device address, serial number, and password are passed through the Google account link flow and are not stored as plain user profile data in this repo
+- device state cached in Firebase only stores normalized fireplace state for the linked account hash
 
 ### self-host
-you can also run your own instance of this custom Google Action. you will need a `Google Cloud Platform` account, `node`, `npm` and the `firebase` CLI.
-follow the great step by step documentation from Google on https://developers.home.google.com/codelabs/smarthome-washer for all the details.  
+- requirements:
+  - node `22`
+  - npm
+  - firebase cli
+  - google cloud cli
+- firebase project currently used by this repo: `smartstovepoc-123`
+
+basic flow:
+```text
+firebase login --reauth
+gcloud auth login
+gcloud config set project smartstovepoc-123
+firebase use smartstovepoc-123
+cd functions
+npm install
+node test.js
+firebase deploy --only functions
+```
+
+### notes
+- the Ecoforest device API uses permissive TLS handling because the device endpoint does not present a cert chain Node accepts cleanly in practice
+- query behavior is intentionally cache-first, with live status refresh happening in the background
+
+### disclaimer
+- this project has no affiliation with Ecoforest and is aimed at personal use

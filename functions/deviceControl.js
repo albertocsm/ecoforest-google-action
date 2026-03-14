@@ -25,6 +25,7 @@ const updateDevice = async ({ execution, usernameHash, deviceId, deviceApiBaseAd
       });
 
       if (params.on === true) {
+        await ecoStove.ecoSetQuietMode(deviceApiBaseAddress, false);
         await ecoStove.ecoTurnOn(deviceApiBaseAddress);
       } else {
         await ecoStove.ecoTurnOff(deviceApiBaseAddress);
