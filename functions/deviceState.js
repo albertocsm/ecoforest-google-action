@@ -12,10 +12,20 @@ const DEFAULT_DEVICE_STATE = Object.freeze({
 
 const buildAvailablePowerSettings = () => POWER_LEVELS.map((level) => ({
   setting_name: `${level}_power`,
-  setting_values: [{
-    setting_synonym: [String(level), `level ${level}`],
-    lang: 'en',
-  }],
+  setting_values: [
+    {
+      setting_synonym: [String(level), `level ${level}`],
+      lang: 'en',
+    },
+    {
+      setting_synonym: [String(level), `nivel ${level}`, `potencia ${level}`],
+      lang: 'es',
+    },
+    {
+      setting_synonym: [String(level), `nivel ${level}`, `potencia ${level}`],
+      lang: 'pt',
+    },
+  ],
 }));
 
 const normalizePowerLevel = (powerLevel) => {
@@ -83,9 +93,9 @@ const buildSyncDevice = () => ({
     'action.devices.traits.Toggles',
   ],
   name: {
-    defaultNames: ['Ecoforest Fireplace'],
+    defaultNames: ['Ecoforest Fireplace', 'Ecoforest Lareira', 'Ecoforest Chimenea'],
     name: 'Fireplace',
-    nicknames: ['Fireplace'],
+    nicknames: ['Fireplace', 'Lareira', 'Chimenea'],
   },
   deviceInfo: {
     manufacturer: 'Ecoforest',
@@ -97,10 +107,20 @@ const buildSyncDevice = () => ({
   attributes: {
     availableModes: [{
       name: POWER_MODE_NAME,
-      name_values: [{
-        name_synonym: ['Power', 'Level', 'Heat level'],
-        lang: 'en',
-      }],
+      name_values: [
+        {
+          name_synonym: ['Power', 'Level', 'Heat level'],
+          lang: 'en',
+        },
+        {
+          name_synonym: ['Potencia', 'Nivel', 'Nivel de calor'],
+          lang: 'es',
+        },
+        {
+          name_synonym: ['Potencia', 'Nivel', 'Nivel de aquecimento'],
+          lang: 'pt',
+        },
+      ],
       settings: buildAvailablePowerSettings(),
       ordered: true,
     }],
@@ -108,10 +128,20 @@ const buildSyncDevice = () => ({
     queryOnlyModes: false,
     availableToggles: [{
       name: QUIET_TOGGLE_NAME,
-      name_values: [{
-        name_synonym: ['Quiet', 'Silence', 'Silent mode'],
-        lang: 'en',
-      }],
+      name_values: [
+        {
+          name_synonym: ['Quiet', 'Silence', 'Silent mode'],
+          lang: 'en',
+        },
+        {
+          name_synonym: ['Silencio', 'Modo silencio', 'Modo silencioso'],
+          lang: 'es',
+        },
+        {
+          name_synonym: ['Silencio', 'Modo silencio', 'Modo silencioso'],
+          lang: 'pt',
+        },
+      ],
     }],
     commandOnlyToggles: false,
     queryOnlyToggles: false,
