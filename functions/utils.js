@@ -1,8 +1,16 @@
 const CryptoJS = require("crypto-js");
 
 const stripAuthorizationHeader = (headers) => {
-    // the "authorization" header comming from the oauth handshake is a Bearer Token. we dont need that bit....
-    return headers.authorization.substring(headers.authorization.indexOf('http'));
+    if (!headers || typeof headers.authorization !== 'string') {
+        throw new Error('Missing authorization header');
+    }
+
+    const authorizationIndex = headers.authorization.indexOf('http');
+    if (authorizationIndex === -1) {
+        throw new Error('Authorization header does not contain a device URL');
+    }
+
+    return headers.authorization.substring(authorizationIndex);
 }
 
 const getUserHash = (headers) => {
@@ -11,7 +19,7 @@ const getUserHash = (headers) => {
 }
 
 const delay = (ms) => {
-    new Promise(res => setTimeout(res, ms))
+    return new Promise(res => setTimeout(res, ms));
 };
 
 exports.stripAuthorizationHeader = stripAuthorizationHeader;

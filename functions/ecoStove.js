@@ -3,6 +3,14 @@ const https = require('https');
 const functions = require('firebase-functions');
 const url = require('url');
 
+const ECOFOREST_ENDPOINT_PATH = '/recepcion_datos_4.cgi/';
+const OPERATIONS = Object.freeze({
+    STATUS: '1002',
+    SET_POWER: '1004',
+    SET_ON_OFF: '1013',
+    SET_QUIET: '1023',
+});
+
 class EcoStove {
     constructor() {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -26,11 +34,9 @@ class EcoStove {
     ecoTurnOn(deviceApiBaseAddress) {
 
         return this._postData(
-            `${deviceApiBaseAddress}/recepcion_datos_4.cgi/`,
+            `${deviceApiBaseAddress}${ECOFOREST_ENDPOINT_PATH}`,
             {
-                //idOperacion: '1004',
-                //potencia: '9',
-                idOperacion: '1013',
+                idOperacion: OPERATIONS.SET_ON_OFF,
                 on_off: 1
             }
         );
@@ -38,61 +44,83 @@ class EcoStove {
 
     ecoTurnOff(deviceApiBaseAddress) {
         return this._postData(
-            `${deviceApiBaseAddress}/recepcion_datos_4.cgi/`,
+            `${deviceApiBaseAddress}${ECOFOREST_ENDPOINT_PATH}`,
             {
-                //idOperacion: '1004',
-                //potencia: '3',
-                idOperacion: '1013',
+                idOperacion: OPERATIONS.SET_ON_OFF,
                 on_off: 0
+            }
+        );
+    }
+
+    ecoSetPower(deviceApiBaseAddress, powerLevel) {
+        return this._postData(
+            `${deviceApiBaseAddress}${ECOFOREST_ENDPOINT_PATH}`,
+            {
+                idOperacion: OPERATIONS.SET_POWER,
+                potencia: String(powerLevel)
+            }
+        );
+    }
+
+    ecoSetQuietMode(deviceApiBaseAddress, enabled) {
+        return this._postData(
+            `${deviceApiBaseAddress}${ECOFOREST_ENDPOINT_PATH}`,
+            {
+                idOperacion: OPERATIONS.SET_QUIET,
+                Vent: enabled ? '1' : '0'
             }
         );
     }
 
     ecoGetStatus(deviceApiBaseAddress) {
         return this._postData(
-            `${deviceApiBaseAddress}/recepcion_datos_4.cgi/`,
+            `${deviceApiBaseAddress}${ECOFOREST_ENDPOINT_PATH}`,
             {
-                idOperacion: '1002'
+                idOperacion: OPERATIONS.STATUS
             }
         ).then(response => {
-            if (response.status !== 200) {
-                return {}
-            }
             return this._parseStatusResponse(response.data);
         });
     }
 
-    _postData(address, data) {
-        return this._httpClient.post(address, new url.URLSearchParams(data))
-            .then(response => {
-                if (response.status !== 200) {
-                    functions.logger.warn(`_postData: invalid response | ${response.status} | ${response.statusText}`);
-                }
-                return response
-            }, error => {
-                functions.logger.error(`_postData: handled error | ${JSON.stringify(error)}`);
-                return error;
-            })
-            .catch(error => {
-                functions.logger.error(`_postData: catched error | ${JSON.stringify(error)}`);
-                return error;
-            });
+    async _postData(address, data) {
+        try {
+            const response = await this._httpClient.post(address, new url.URLSearchParams(data));
+
+            if (response.status !== 200) {
+                throw new Error(`Unexpected response status ${response.status} ${response.statusText}`);
+            }
+
+            return response;
+        }
+        catch (error) {
+            functions.logger.error(`_postData: request failed | ${error.message}`);
+            throw error;
+        }
     }
 
     _parseStatusResponse(value) {
-        const isOn = value
-            .split('\n')
-            .find(line => line.startsWith('on_off'))
-            .split('=')[1];
-
-        const estado = value
-            .split('\n')
-            .find(line => line.startsWith('estado'))
-            .split('=')[1];
+        const parsed = this._parseKeyValueResponse(value);
+        const isOn = parsed.on_off;
+        const estado = parsed.estado;
+        const power = Number(parsed.consigna_potencia);
 
         return {
-            on: isOn === '0' || (isOn === '1' && estado == '8') ? false : true
+            on: isOn === '0' || (isOn === '1' && estado == '8') ? false : true,
+            power: Number.isNaN(power) ? 1 : power,
+            quiet: parsed.eco === '1'
         };
+    }
+
+    _parseKeyValueResponse(value) {
+        return value
+            .split('\n')
+            .filter(line => line.includes('='))
+            .reduce((result, line) => {
+                const [key, ...rest] = line.split('=');
+                result[key] = rest.join('=');
+                return result;
+            }, {});
     }
 }
 
