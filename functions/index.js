@@ -19,9 +19,8 @@ const buildExecuteResult = (deviceId, outcome) => ({
   ...(outcome.errorCode ? { errorCode: outcome.errorCode } : {}),
 });
 
-// Initialize
-admin.initializeApp();
-const firebaseRef = admin.database().ref('/');
+const adminApp = admin.apps.length === 0 ? admin.initializeApp() : admin.app();
+
 const auth = new google.auth.GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/homegraph'],
 });
@@ -31,6 +30,8 @@ const homegraph = google.homegraph({
 });
 const ecoStove = new EcoStove();
 const app = smarthome();
+
+const getFirebaseRef = () => adminApp.database().ref('/');
 
 app.onSync((body, headers) => {
   functions.logger.info(`onSync...`);
@@ -61,7 +62,7 @@ app.onQuery(async (body, headers) => {
         deviceId,
         deviceApiBaseAddress: stripAuthorizationHeader(headers),
         ecoStove,
-        firebaseRef,
+        firebaseRef: getFirebaseRef(),
         logger: functions.logger,
         delay,
       })
@@ -92,7 +93,7 @@ app.onExecute(async (body, headers) => {
             deviceId: device.id,
             deviceApiBaseAddress: stripAuthorizationHeader(headers),
             ecoStove,
-            firebaseRef,
+            firebaseRef: getFirebaseRef(),
             logger: functions.logger,
           })
             .then((data) => buildExecuteResult(device.id, {
