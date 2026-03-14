@@ -10,6 +10,14 @@ const DEFAULT_DEVICE_STATE = Object.freeze({
   quiet: false,
 });
 
+const powerToBrightness = (powerLevel, isOn) => {
+  if (!isOn) {
+    return 0;
+  }
+
+  return normalizePowerLevel(powerLevel) * 10;
+};
+
 const buildAvailablePowerSettings = () => POWER_LEVELS.map((level) => ({
   setting_name: `${level}_power`,
   setting_values: [
@@ -23,7 +31,11 @@ const buildAvailablePowerSettings = () => POWER_LEVELS.map((level) => ({
     },
     {
       setting_synonym: [String(level), `nivel ${level}`, `potencia ${level}`],
-      lang: 'pt',
+      lang: 'pt-BR',
+    },
+    {
+      setting_synonym: [String(level), `nivel ${level}`, `potencia ${level}`],
+      lang: 'pt-PT',
     },
   ],
 }));
@@ -70,6 +82,7 @@ const toGoogleStates = (state = DEFAULT_DEVICE_STATE) => {
   return {
     online: true,
     on: normalizedState.on,
+    brightness: powerToBrightness(normalizedState.power, normalizedState.on),
     currentModeSettings: {
       [POWER_MODE_NAME]: toModeSettingName(normalizedState.power),
     },
@@ -89,6 +102,7 @@ const buildSyncDevice = () => ({
   type: 'action.devices.types.FIREPLACE',
   traits: [
     'action.devices.traits.OnOff',
+    'action.devices.traits.Brightness',
     'action.devices.traits.Modes',
     'action.devices.traits.Toggles',
   ],
@@ -113,12 +127,16 @@ const buildSyncDevice = () => ({
           lang: 'en',
         },
         {
-          name_synonym: ['Potencia', 'Nivel', 'Nivel de calor'],
+          name_synonym: ['Nivel', 'Potencia',  'Nivel de calor'],
           lang: 'es',
         },
         {
-          name_synonym: ['Potencia', 'Nivel', 'Nivel de aquecimento'],
-          lang: 'pt',
+          name_synonym: ['Nivel', 'Potencia', 'Nivel de aquecimento'],
+          lang: 'pt-BR',
+        },
+        {
+          name_synonym: ['Nivel', 'Potencia', 'Nivel de aquecimento'],
+          lang: 'pt-PT',
         },
       ],
       settings: buildAvailablePowerSettings(),
@@ -126,6 +144,7 @@ const buildSyncDevice = () => ({
     }],
     commandOnlyModes: false,
     queryOnlyModes: false,
+    commandOnlyBrightness: false,
     availableToggles: [{
       name: QUIET_TOGGLE_NAME,
       name_values: [
@@ -139,7 +158,11 @@ const buildSyncDevice = () => ({
         },
         {
           name_synonym: ['Silencio', 'Modo silencio', 'Modo silencioso'],
-          lang: 'pt',
+          lang: 'pt-BR',
+        },
+        {
+          name_synonym: ['Silencio', 'Modo silencio', 'Modo silencioso'],
+          lang: 'pt-PT',
         },
       ],
     }],
@@ -159,6 +182,7 @@ module.exports = {
   buildSyncDevice,
   normalizePowerLevel,
   parsePowerModeSetting,
+  powerToBrightness,
   statesEqual,
   toGoogleQueryStates,
   toGoogleStates,

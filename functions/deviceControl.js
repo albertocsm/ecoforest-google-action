@@ -34,13 +34,17 @@ const updateDevice = async ({ execution, usernameHash, deviceId, deviceApiBaseAd
     case 'action.devices.commands.SetModes': {
       const powerLevel = parsePowerModeSetting(params.updateModeSettings[POWER_MODE_NAME]);
 
-      await ecoStove.ecoSetPower(deviceApiBaseAddress, powerLevel);
       state = buildDeviceState({
         ...currentState,
         power: powerLevel,
       });
+      await ecoStove.ecoSetPower(deviceApiBaseAddress, powerLevel);
       break;
     }
+    case 'action.devices.commands.BrightnessAbsolute':
+    case 'action.devices.commands.BrightnessRelative':
+      state = buildDeviceState(currentState);
+      break;
     case 'action.devices.commands.SetToggles': {
       const quiet = Boolean(params.updateToggleSettings[QUIET_TOGGLE_NAME]);
 
