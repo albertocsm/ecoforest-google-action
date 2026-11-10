@@ -18,10 +18,18 @@ const updateDevice = async ({ execution, usernameHash, deviceId, deviceApiBaseAd
   let state;
 
   switch (command) {
-    case 'action.devices.commands.OnOff':
+    case 'action.devices.commands.OnOff': {
+      // Turning the device on always forces quiet mode off on the physical
+      // stove (see ecoSetQuietMode below), so the persisted state must
+      // reflect that. Otherwise Firebase keeps quiet=true while the device
+      // reports quiet=false, and the app shows stale quiet state until a
+      // manual refresh triggers a live-status re-sync.
+      const nextQuiet = params.on === true ? false : currentState.quiet;
+
       state = buildDeviceState({
         ...currentState,
         on: params.on,
+        quiet: nextQuiet,
       });
 
       if (params.on === true) {
@@ -31,6 +39,7 @@ const updateDevice = async ({ execution, usernameHash, deviceId, deviceApiBaseAd
         await ecoStove.ecoTurnOff(deviceApiBaseAddress);
       }
       break;
+    }
     case 'action.devices.commands.SetModes': {
       const powerLevel = parsePowerModeSetting(params.updateModeSettings[POWER_MODE_NAME]);
 
