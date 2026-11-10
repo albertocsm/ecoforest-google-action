@@ -4,7 +4,8 @@ const functions = require('firebase-functions/v1');
 const crypto = require('crypto');
 const { smarthome } = require('actions-on-google');
 const { google } = require('googleapis');
-const admin = require('firebase-admin');
+const { getApps, getApp, initializeApp } = require('firebase-admin/app');
+const { getDatabase } = require('firebase-admin/database');
 const EcoStove = require('./ecoStove.js');
 const { DEVICE_ID, buildSyncDevice, toGoogleStates } = require('./deviceState.js');
 const { updateDevice, queryDevice } = require('./deviceControl.js');
@@ -20,7 +21,7 @@ const buildExecuteResult = (deviceId, outcome) => ({
   ...(outcome.errorCode ? { errorCode: outcome.errorCode } : {}),
 });
 
-const adminApp = admin.apps.length === 0 ? admin.initializeApp() : admin.app();
+const adminApp = getApps().length === 0 ? initializeApp() : getApp();
 
 const auth = new google.auth.GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/homegraph'],
@@ -32,7 +33,7 @@ const homegraph = google.homegraph({
 const ecoStove = new EcoStove();
 const app = smarthome();
 
-const getFirebaseRef = () => adminApp.database().ref('/');
+const getFirebaseRef = () => getDatabase(adminApp).ref('/');
 
 app.onSync((body, headers) => {
   functions.logger.info(`onSync...`);

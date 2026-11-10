@@ -144,7 +144,7 @@ const testUtils = async () => {
     stripAuthorizationHeader(headers),
     'https://serial:password@192.168.1.97:8000'
   );
-  assert.strictEqual(getUserHash(headers).length, 32);
+  assert.strictEqual(getUserHash(headers), 'ea91fcb3e99d159ea14fdb5501bc2162');
   assert.throws(() => stripAuthorizationHeader({ authorization: 'Bearer nope' }));
 
   const start = Date.now();
