@@ -1,6 +1,7 @@
 'use strict';
 
 const functions = require('firebase-functions/v1');
+const crypto = require('crypto');
 const { smarthome } = require('actions-on-google');
 const { google } = require('googleapis');
 const admin = require('firebase-admin');
@@ -143,7 +144,7 @@ exports.reportstate = functions.database.ref('{usernameHash}/{deviceId}').onWrit
       }
 
       const requestBody = {
-        requestId: 'ff36a3cc',
+        requestId: crypto.randomUUID(),
         agentUserId: context.params.usernameHash,
         payload: {
           devices: {
