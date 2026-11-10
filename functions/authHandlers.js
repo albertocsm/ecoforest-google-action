@@ -4,20 +4,22 @@ const util = require('util');
 const functions = require('firebase-functions');
 
 const escapeHtml = (value = '') => String(value)
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 const readRequiredField = (body, fieldName) => {
-  const value = body && typeof body[fieldName] === 'string' ? body[fieldName].trim() : '';
+  const value = body && typeof body[fieldName] === 'string' ?
+    body[fieldName].trim() : '';
   if (!value) {
     throw new Error(`Missing required field: ${fieldName}`);
   }
   return value;
 };
 
+// Line continuations preserve the exact HTML while keeping source lines short.
 const renderLoginPage = (query) => `
   <!doctype html>
   <html lang="en">
@@ -49,7 +51,8 @@ const renderLoginPage = (query) => `
           font-family: Georgia, "Times New Roman", serif;
           color: var(--text);
           background:
-            radial-gradient(circle at top left, rgba(178, 84, 45, 0.12), transparent 28%),
+            radial-gradient(circle at top left, rgba(178, 84, 45, 0.12), \
+transparent 28%),
             linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
         }
 
@@ -148,7 +151,8 @@ const renderLoginPage = (query) => `
           padding: 1rem;
           border: 0;
           border-radius: 999px;
-          background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+          background: linear-gradient(180deg, var(--accent), \
+var(--accent-dark));
           color: #fffaf4;
           font: inherit;
           font-size: 1rem;
@@ -168,37 +172,50 @@ const renderLoginPage = (query) => `
       <div class="wrap">
         <div class="card">
           <h1>Link your Ecoforest fireplace</h1>
-          <p class="intro">Enter the same connection details used by the Ecoforest web app so Google Home can talk to your device.</p>
+          <p class="intro">Enter the same connection details used by the \
+Ecoforest web app so Google Home can talk to your device.</p>
 
           <div class="example">
             <strong>What you need</strong>
             <ul class="hint-list">
               <li>Address example: <code>easynet1.ecoforest.es:12345</code></li>
-              <li>Serial number: the 11-digit device serial, for example <code>12345678912</code></li>
-              <li>Password: the first 8 characters of the device password, for example <code>qwertqwe</code></li>
+              <li>Serial number: the 11-digit device serial, for example \
+<code>12345678912</code></li>
+              <li>Password: the first 8 characters of the device password, \
+for example <code>qwertqwe</code></li>
             </ul>
           </div>
 
           <form action="/login" method="post">
-            <input type="hidden" name="responseurl" value="${escapeHtml(query.responseurl || '')}" />
-            <input type="hidden" name="state" value="${escapeHtml(query.state || '')}" />
+            <input type="hidden" name="responseurl" value="${
+  escapeHtml(query.responseurl || '')}" />
+            <input type="hidden" name="state" value="${
+  escapeHtml(query.state || '')}" />
 
             <div class="field">
               <label for="address">Address</label>
-              <input id="address" name="address" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="easynet1.ecoforest.es:12345" required>
+              <input id="address" name="address" type="text" inputmode="url" \
+autocapitalize="none" autocorrect="off" spellcheck="false" \
+placeholder="easynet1.ecoforest.es:12345" required>
               <div class="hint">Type only the host and port.</div>
             </div>
 
             <div class="field">
               <label for="serialnumber">Serial number</label>
-              <input id="serialnumber" name="serialnumber" type="text" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" placeholder="12345678912" required>
-              <div class="hint">Use the 11-digit serial number from the device.</div>
+              <input id="serialnumber" name="serialnumber" type="text" \
+inputmode="numeric" pattern="[0-9]{11}" maxlength="11" \
+placeholder="12345678912" required>
+              <div class="hint">Use the 11-digit serial number from the \
+device.</div>
             </div>
 
             <div class="field">
               <label for="password">Device password</label>
-              <input id="password" name="password" type="password" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="8" placeholder="qwertqwe" required>
-              <div class="hint">Use the first 8 characters of the device password.</div>
+              <input id="password" name="password" type="password" \
+autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="8" \
+placeholder="qwertqwe" required>
+              <div class="hint">Use the first 8 characters of the device \
+password.</div>
             </div>
 
             <button type="submit">Link fireplace</button>
@@ -212,7 +229,8 @@ const renderLoginPage = (query) => `
 const fakeauth = (request, response) => {
   functions.logger.log('fakeauth: redirecting to login page');
   return response.redirect(
-    `/login?responseurl=${request.query.redirect_uri}&state=${request.query.state}`
+      `/login?responseurl=${request.query.redirect_uri}&state=${
+        request.query.state}`,
   );
 };
 
@@ -224,22 +242,23 @@ const login = (request, response) => {
 
   if (request.method === 'POST') {
     try {
-      const responseUrl = decodeURIComponent(readRequiredField(request.body, 'responseurl'));
+      const responseUrl = decodeURIComponent(
+          readRequiredField(request.body, 'responseurl'),
+      );
       const state = readRequiredField(request.body, 'state');
       const address = readRequiredField(request.body, 'address');
       const serialnumber = readRequiredField(request.body, 'serialnumber');
       const password = readRequiredField(request.body, 'password');
       const redirectUrl = util.format(
-        '%s?s&state=%s&code=%s',
-        responseUrl,
-        state,
-        `https://${serialnumber}:${password}@${address}`
+          '%s?s&state=%s&code=%s',
+          responseUrl,
+          state,
+          `https://${serialnumber}:${password}@${address}`,
       );
 
       response.redirect(redirectUrl);
       return;
-    }
-    catch (error) {
+    } catch (error) {
       response.status(400).send(error.message);
       return;
     }
@@ -277,8 +296,7 @@ const faketoken = (request, response) => {
     }
 
     response.status(httpStatusOk).json(payload);
-  }
-  catch (err) {
+  } catch (err) {
     functions.logger.error(`faketoken: ${err}`);
     response.status(500).send(`faketoken: Error requesting token: ${err}`);
   }

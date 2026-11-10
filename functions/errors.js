@@ -11,7 +11,8 @@ const toExecuteErrorCode = (error) => {
     return EXECUTE_ERROR_CODES.HARD_ERROR;
   }
 
-  if (error.response || error.code === 'ECONNABORTED' || error.code === 'ENOTFOUND') {
+  if (error.response || error.code === 'ECONNABORTED' ||
+      error.code === 'ENOTFOUND') {
     return EXECUTE_ERROR_CODES.DEVICE_OFFLINE;
   }
 

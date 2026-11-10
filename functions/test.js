@@ -8,11 +8,13 @@ const {
   statesEqual,
   toGoogleStates,
 } = require('./deviceState.js');
-const { queryDevice, updateDevice } = require('./deviceControl.js');
-const { extractStoredDeviceState } = require('./stateStore.js');
-const { escapeHtml, readRequiredField, renderLoginPage } = require('./authHandlers.js');
-const { EXECUTE_ERROR_CODES, toExecuteErrorCode } = require('./errors.js');
-const { stripAuthorizationHeader, getUserHash, delay } = require('./utils.js');
+const {queryDevice, updateDevice} = require('./deviceControl.js');
+const {extractStoredDeviceState} = require('./stateStore.js');
+const {
+  escapeHtml, readRequiredField, renderLoginPage,
+} = require('./authHandlers.js');
+const {EXECUTE_ERROR_CODES, toExecuteErrorCode} = require('./errors.js');
+const {stripAuthorizationHeader, getUserHash, delay} = require('./utils.js');
 
 const testParseStatusResponse = () => {
   const ecoStove = new EcoStove();
@@ -61,8 +63,8 @@ const testCommandPayloads = async () => {
   const capturedCalls = [];
 
   ecoStove._postData = async (address, data) => {
-    capturedCalls.push({ address, data });
-    return { status: 200, data: 'ok' };
+    capturedCalls.push({address, data});
+    return {status: 200, data: 'ok'};
   };
 
   const baseUrl = 'https://device.example:8000';
@@ -73,15 +75,15 @@ const testCommandPayloads = async () => {
   assert.deepStrictEqual(capturedCalls, [
     {
       address: 'https://device.example:8000/recepcion_datos_4.cgi/',
-      data: { idOperacion: '1004', potencia: '9' },
+      data: {idOperacion: '1004', potencia: '9'},
     },
     {
       address: 'https://device.example:8000/recepcion_datos_4.cgi/',
-      data: { idOperacion: '1023', Vent: '1' },
+      data: {idOperacion: '1023', Vent: '1'},
     },
     {
       address: 'https://device.example:8000/recepcion_datos_4.cgi/',
-      data: { idOperacion: '1023', Vent: '0' },
+      data: {idOperacion: '1023', Vent: '0'},
     },
   ]);
 };
@@ -95,14 +97,14 @@ const testDeviceStateHelpers = () => {
   assert.strictEqual(powerToBrightness(9, false), 0);
   assert.throws(() => parsePowerModeSetting('banana'));
   assert.ok(statesEqual(
-    { on: true, power: 2, quiet: false },
-    { on: true, power: 2, quiet: false }
+      {on: true, power: 2, quiet: false},
+      {on: true, power: 2, quiet: false},
   ));
   assert.ok(!statesEqual(
-    { on: true, power: 2, quiet: false },
-    { on: true, power: 3, quiet: false }
+      {on: true, power: 2, quiet: false},
+      {on: true, power: 3, quiet: false},
   ));
-  assert.deepStrictEqual(toGoogleStates({ on: true, power: 4, quiet: true }), {
+  assert.deepStrictEqual(toGoogleStates({on: true, power: 4, quiet: true}), {
     online: true,
     on: true,
     brightness: 40,
@@ -117,7 +119,7 @@ const testDeviceStateHelpers = () => {
 
 const testStateStoreCompatibility = () => {
   assert.deepStrictEqual(extractStoredDeviceState({
-    state: { on: true, power: 7, quiet: true },
+    state: {on: true, power: 7, quiet: true},
   }), {
     on: true,
     power: 7,
@@ -125,7 +127,7 @@ const testStateStoreCompatibility = () => {
   });
 
   assert.deepStrictEqual(extractStoredDeviceState({
-    OnOff: { on: true },
+    OnOff: {on: true},
   }), {
     on: true,
     power: 1,
@@ -141,11 +143,11 @@ const testUtils = async () => {
   };
 
   assert.strictEqual(
-    stripAuthorizationHeader(headers),
-    'https://serial:password@192.168.1.97:8000'
+      stripAuthorizationHeader(headers),
+      'https://serial:password@192.168.1.97:8000',
   );
   assert.strictEqual(getUserHash(headers), 'ea91fcb3e99d159ea14fdb5501bc2162');
-  assert.throws(() => stripAuthorizationHeader({ authorization: 'Bearer nope' }));
+  assert.throws(() => stripAuthorizationHeader({authorization: 'Bearer nope'}));
 
   const start = Date.now();
   await delay(5);
@@ -164,10 +166,10 @@ const testUpdateDeviceHelpers = async () => {
         },
         once: async () => ({
           exists: () => true,
-          val: () => ({ state: { on: true, power: 2, quiet: false } }),
+          val: () => ({state: {on: true, power: 2, quiet: false}}),
         }),
         set: async (value) => {
-          writes.push({ path: [...currentPath], value });
+          writes.push({path: [...currentPath], value});
         },
       };
     },
@@ -176,17 +178,18 @@ const testUpdateDeviceHelpers = async () => {
   const ecoStove = {
     ecoTurnOn: async () => {},
     ecoTurnOff: async () => {},
-    ecoSetPower: async (base, power) => writes.push({ powerCall: [base, power] }),
-    ecoSetQuietMode: async (base, quiet) => writes.push({ quietCall: [base, quiet] }),
-    ecoGetStatus: async () => ({ on: true, power: 3, quiet: true }),
+    ecoSetPower: async (base, power) => writes.push({powerCall: [base, power]}),
+    ecoSetQuietMode: async (base, quiet) =>
+      writes.push({quietCall: [base, quiet]}),
+    ecoGetStatus: async () => ({on: true, power: 3, quiet: true}),
   };
 
-  const logger = { info() {}, warn() {}, error() {} };
+  const logger = {info() {}, warn() {}, error() {}};
 
   const updateResult = await updateDevice({
     execution: {
       command: 'action.devices.commands.SetModes',
-      params: { updateModeSettings: { power_mode: '5_power' } },
+      params: {updateModeSettings: {power_mode: '5_power'}},
     },
     usernameHash: 'user',
     deviceId: 'fireplace',
@@ -200,14 +203,14 @@ const testUpdateDeviceHelpers = async () => {
     online: true,
     on: true,
     brightness: 50,
-    currentModeSettings: { power_mode: '5_power' },
-    currentToggleSettings: { silence_toggle: false },
+    currentModeSettings: {power_mode: '5_power'},
+    currentToggleSettings: {silence_toggle: false},
   });
 
   const brightnessNoopResult = await updateDevice({
     execution: {
       command: 'action.devices.commands.BrightnessAbsolute',
-      params: { brightness: 90 },
+      params: {brightness: 90},
     },
     usernameHash: 'user',
     deviceId: 'fireplace',
@@ -221,11 +224,12 @@ const testUpdateDeviceHelpers = async () => {
     online: true,
     on: true,
     brightness: 20,
-    currentModeSettings: { power_mode: '2_power' },
-    currentToggleSettings: { silence_toggle: false },
+    currentModeSettings: {power_mode: '2_power'},
+    currentToggleSettings: {silence_toggle: false},
   });
 
-  assert.ok(!writes.some((entry) => entry.powerCall && entry.powerCall[1] === 90));
+  assert.ok(!writes.some((entry) =>
+    entry.powerCall && entry.powerCall[1] === 90));
 
   const queryResult = await queryDevice({
     usernameHash: 'user',
@@ -243,18 +247,27 @@ const testUpdateDeviceHelpers = async () => {
 };
 
 const testAuthHandlers = () => {
-  const html = renderLoginPage({ responseurl: 'abc', state: '123' });
+  const html = renderLoginPage({responseurl: 'abc', state: '123'});
   assert.ok(html.includes('responseurl'));
   assert.ok(html.includes('state'));
   assert.strictEqual(escapeHtml('<script>'), '&lt;script&gt;');
-  assert.strictEqual(readRequiredField({ foo: ' bar ' }, 'foo'), 'bar');
+  assert.strictEqual(readRequiredField({foo: ' bar '}, 'foo'), 'bar');
   assert.throws(() => readRequiredField({}, 'foo'));
 };
 
 const testErrorMapping = () => {
-  assert.strictEqual(toExecuteErrorCode(new Error('Unsupported command')), EXECUTE_ERROR_CODES.PROTOCOL_ERROR);
-  assert.strictEqual(toExecuteErrorCode({ code: 'ECONNABORTED' }), EXECUTE_ERROR_CODES.DEVICE_OFFLINE);
-  assert.strictEqual(toExecuteErrorCode(new Error('boom')), EXECUTE_ERROR_CODES.HARD_ERROR);
+  assert.strictEqual(
+      toExecuteErrorCode(new Error('Unsupported command')),
+      EXECUTE_ERROR_CODES.PROTOCOL_ERROR,
+  );
+  assert.strictEqual(
+      toExecuteErrorCode({code: 'ECONNABORTED'}),
+      EXECUTE_ERROR_CODES.DEVICE_OFFLINE,
+  );
+  assert.strictEqual(
+      toExecuteErrorCode(new Error('boom')),
+      EXECUTE_ERROR_CODES.HARD_ERROR,
+  );
 };
 
 const run = async () => {

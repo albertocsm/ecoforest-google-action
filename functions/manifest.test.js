@@ -21,8 +21,9 @@ for (const name of ['fakeauth', 'faketoken', 'login', 'smarthome']) {
 const reportState = functions.reportstate.__endpoint;
 assert.strictEqual(reportState.platform, 'gcfv1');
 assert.strictEqual(reportState.eventTrigger.eventType,
-  'providers/google.firebase.database/eventTypes/ref.write');
+    'providers/google.firebase.database/eventTypes/ref.write');
 assert.strictEqual(reportState.eventTrigger.eventFilters.resource,
-  'projects/_/instances/demo-ecoforest-default-rtdb/refs/{usernameHash}/{deviceId}');
+    'projects/_/instances/demo-ecoforest-default-rtdb/' +
+    'refs/{usernameHash}/{deviceId}');
 
 console.log('Function manifest tests passed');

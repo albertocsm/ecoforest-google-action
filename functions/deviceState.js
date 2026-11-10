@@ -3,7 +3,7 @@
 const DEVICE_ID = 'fireplace';
 const POWER_MODE_NAME = 'power_mode';
 const QUIET_TOGGLE_NAME = 'silence_toggle';
-const POWER_LEVELS = Array.from({ length: 9 }, (_, index) => index + 1);
+const POWER_LEVELS = Array.from({length: 9}, (_, index) => index + 1);
 const DEFAULT_DEVICE_STATE = Object.freeze({
   on: false,
   power: 1,
@@ -50,7 +50,8 @@ const normalizePowerLevel = (powerLevel) => {
   return Math.min(9, Math.max(1, numericPower));
 };
 
-const toModeSettingName = (powerLevel) => `${normalizePowerLevel(powerLevel)}_power`;
+const toModeSettingName = (powerLevel) =>
+  `${normalizePowerLevel(powerLevel)}_power`;
 
 const parsePowerModeSetting = (settingName) => {
   const match = /^(\d+)_power$/.exec(settingName || '');
@@ -68,13 +69,15 @@ const buildDeviceState = (state = {}) => ({
   quiet: Boolean(state.quiet),
 });
 
-const statesEqual = (left = DEFAULT_DEVICE_STATE, right = DEFAULT_DEVICE_STATE) => {
+const statesEqual = (
+    left = DEFAULT_DEVICE_STATE, right = DEFAULT_DEVICE_STATE,
+) => {
   const normalizedLeft = buildDeviceState(left);
   const normalizedRight = buildDeviceState(right);
 
-  return normalizedLeft.on === normalizedRight.on
-    && normalizedLeft.power === normalizedRight.power
-    && normalizedLeft.quiet === normalizedRight.quiet;
+  return normalizedLeft.on === normalizedRight.on &&
+    normalizedLeft.power === normalizedRight.power &&
+    normalizedLeft.quiet === normalizedRight.quiet;
 };
 
 const toGoogleStates = (state = DEFAULT_DEVICE_STATE) => {
@@ -107,7 +110,9 @@ const buildSyncDevice = () => ({
     'action.devices.traits.Toggles',
   ],
   name: {
-    defaultNames: ['Ecoforest Fireplace', 'Ecoforest Lareira', 'Ecoforest Chimenea'],
+    defaultNames: [
+      'Ecoforest Fireplace', 'Ecoforest Lareira', 'Ecoforest Chimenea',
+    ],
     name: 'Fireplace',
     nicknames: ['Fireplace', 'Lareira', 'Chimenea'],
   },
@@ -127,7 +132,7 @@ const buildSyncDevice = () => ({
           lang: 'en',
         },
         {
-          name_synonym: ['Nivel', 'Potencia',  'Nivel de calor'],
+          name_synonym: ['Nivel', 'Potencia', 'Nivel de calor'],
           lang: 'es',
         },
         {
