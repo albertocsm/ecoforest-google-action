@@ -1,5 +1,4 @@
 **/functions/node_modules
-**/functions/package-lock.json
 **/firebase-debug.log
 **/.firebaserc
 **/.firebase
@@ -8,3 +7,9 @@
 **/worksheet**
 **/*.log
 **/test**
+!functions/test.js
+gha-creds-*.json
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan

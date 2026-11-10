@@ -1,27 +1,37 @@
-### what is this and who is it for?
-- this is a custom Google Home cloud-to-cloud bridge for Ecoforest fireplaces
-- it lets you control a fireplace from the Google Home app and Google Assistant, which is useful if you prefer voice control or want a simpler mobile UI than the vendor app
+# Ecoforest Google Home Bridge
 
-### supported features
-- power on / off
-- set power level from 1 to 9
-- toggle quiet / silence mode
+Control your Ecoforest fireplace from Google Home or Google Assistant. This
+cloud-to-cloud bridge connects Google Home to the device's Ecoforest API, so
+you can adjust the fire from the app or with your voice.
 
-### how to get access to this Google Home Action?
-- go to `https://console.home.google.com/`
-- log in with your google account
-- open the `SmartStovePoC` project
-- open the test area and start the latest available test version
+## Features
 
-### how to connect your Ecoforest device?
-- install and open Google Home on your phone
-- choose `Set up device`
-- choose `Works with Google Home`
-- find `[test] MyEco`
-- complete the login form with your Ecoforest host, serial number, and password
-- once the device is added, rename it to something natural like `Fireplace`
+- Turn the fireplace on and off.
+- Set its power level from 1 to 9.
+- Toggle quiet mode.
+- Report power as a brightness percentage, from 10% at level 1 to 90% at level 9.
 
-### useful voice commands
+Brightness is an indicator only: changing it does not change the stove's power.
+Google Home's display and language support may vary.
+
+## Connect Your Fireplace
+
+The integration is currently available as a test. With access to the
+`SmartStovePoC` project, open the test area in the
+[Google Home Developer Console](https://console.home.google.com/) and start the
+latest test version.
+
+In the Google Home app:
+
+1. Choose **Set up device**, then **Works with Google Home**.
+2. Select **[test] MyEco**.
+3. Enter your Ecoforest host and port, 11-digit serial number, and the first
+   eight characters of the device password.
+4. Rename the device if you like, for example to `Fireplace` or `Lareira`.
+
+## Voice Commands
+
+Try commands such as:
 
 turn on / off
 ```text
@@ -43,33 +53,33 @@ toggle quiet mode
 (EN) Hey Google, turn off silence mode on Fireplace
 ```
 
-### privacy
-- the device address, serial number, and password are passed through the Google account link flow and are not stored as plain user profile data in this repo
-- device state cached in Firebase only stores normalized fireplace state for the linked account hash
+## Build And Deploy
 
-### self-host
-- requirements:
-  - node `22`
-  - npm
-  - firebase cli
-  - google cloud cli
-- firebase project currently used by this repo: `smartstovepoc-123`
+You'll need Node.js 22, npm, make, the Firebase CLI, and access to a configured
+Firebase project. From the repository root:
 
-basic flow:
-```text
-firebase login --reauth
-gcloud auth login
-gcloud config set project smartstovepoc-123
-firebase use smartstovepoc-123
-cd functions
-npm install
-node test.js
-firebase deploy --only functions
+```sh
+firebase login
+make build
+make deploy PROJECT=your-firebase-project-id
 ```
 
-### notes
-- the Ecoforest device API uses permissive TLS handling because the device endpoint does not present a cert chain Node accepts cleanly in practice
-- query behavior is intentionally cache-first, with live status refresh happening in the background
+`make build` installs locked dependencies and runs the tests; `make test` runs
+them using existing dependencies. Deployment includes Cloud Functions and
+Realtime Database rules. **Deploying rules overwrites the live rules**, so
+review `database.rules.json` before deploying.
 
-### disclaimer
-- this project has no affiliation with Ecoforest and is aimed at personal use
+Pull requests run tests, and pushes to `main` deploy to the configured project.
+See [deployment infrastructure](infra/github-deploy/README.md) for Terraform
+and GitHub Actions setup.
+
+## Notes
+
+- Firebase caches normalized device state; queries return cached state while a
+  live refresh runs in the background.
+- The device API uses permissive TLS handling because the device endpoint's
+  certificate chain is not accepted by Node.js. This weakens connection security.
+- Device connection details are carried in the Google account-linking tokens;
+  treat those tokens as credentials.
+
+This is an independent personal project and is not affiliated with Ecoforest.
